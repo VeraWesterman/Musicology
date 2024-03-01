@@ -19,6 +19,83 @@ library(ggplot2)
 
 ```
 
+
+### Self Similarity matrix: Eyes closed by Ed Sheeran
+
+```{r}
+ed_sheeran <-
+  get_tidy_audio_analysis("3p7XQpdt8Dr6oMXSvRZ9bg") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches, timbre)
+
+compmus_long_distance(
+  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = pitches,
+  method = "euclidean"
+) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(title = "Eyes Closed - Ed Sheeran Pitch", x = NULL, y = NULL) +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL)
+```
+
+
+***
+**What we see:**
+
+Tbh I have a lot of difficulties making sense of this plot and I don't really understand what the use of it is, so if anyone can help in the feedback I would be very greatfull!
+
+### Timbre Similarity matrix: Uncharted by Kensington
+
+```{r}
+kensington <-
+  get_tidy_audio_analysis("1OJcaSbK9DBaxHExACplwA") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches, timbre)
+
+compmus_long_distance(
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = timbre,
+  method = "euclidean"
+) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(title = "Eyes Closed - Ed Sheeran Timbre", x = NULL, y = NULL) +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL)
+```
+
+
+***
+**What we see:**
+Here we can see the timbre throughout the song Uncharted by Kensington. The music switches from singing with a guitar to using background singers, drums and other instruments. You can clearly see that the song has a build up in instruments. For the first part only one voice and the guitar is audible, after that the song keeps building up with adding drums and background voices. At some point the timbre changes again (see the yellow lines at 3/4 of the song). In the music only a voice is audible at this part, after that the other instruments and background voices start playing. In the end the song is calming down with only a guitar and main voice. 
+
+
+
+
 ### Study Objectives
 
 **A** **Comparative Study of Spotify Wrapped Playlists and Daily Mixes**
@@ -78,18 +155,18 @@ In this plot you can see the enenrgy against the danceability of both the wrappe
 
 ```{r}
 # Load the data
-wood <- get_tidy_audio_analysis("10RX2JZjVT3Rm9bS6XPEy5") |>
+chroma <- get_tidy_audio_analysis("10RX2JZjVT3Rm9bS6XPEy5") |>
   select(segments) |>
   unnest(segments) |>
   select(start, duration, pitches)
 
 # Perform necessary transformations
-wood <- wood |>
+chroma <- chroma |>
   mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
   compmus_gather_chroma() 
 
 # Create ggplot object
-p <- ggplot(wood, aes(x = start + duration / 2, width = duration, y = pitch_class, fill = value)) +
+p <- ggplot(chroma, aes(x = start + duration / 2, width = duration, y = pitch_class, fill = value)) +
   geom_tile() +
   labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
   theme_minimal() +
@@ -107,4 +184,5 @@ p_plotly
 
 **What we see:**
 
-In the picture we can see the chromagram of the song Wings by Lina Meike. This is a song played by a friend of mine. I hope to be able to ask her for the actual notes and compare it to this chromagram next week.
+In the picture we can see the chromagram of the song Wings by Lina Meike. This is a song played by a friend of mine.
+
