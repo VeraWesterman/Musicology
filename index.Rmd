@@ -12,6 +12,10 @@ library(flexdashboard)
 library(tidyverse)
 library(spotifyr)
 library(compmus)
+library(plotly)
+library(dplyr)
+library(purrr)
+library(ggplot2)
 
 ```
 
@@ -37,29 +41,31 @@ dailymix5 <- get_playlist_audio_features("", "6LdtUdGsF399LonyHPc3OG")
 dailymix6 <- get_playlist_audio_features("", "0ZWKIhgkIHSHImcwnSmIgv")
 wrapped <- get_playlist_audio_features("", "3t3AcAxKQhFuWkD4791XWP")
 lina <- get_track_audio_features("1wwVk5Zzzc7dRZ3SjHhQIB")
+lina_analysis <- get_track_audio_analysis("1wwVk5Zzzc7dRZ3SjHhQIB")
 
 wrapped_subset <- wrapped[, c("danceability", "energy")]
 dailymix1_subset <- dailymix1[, c("danceability", "energy")]
 lina_subset <- lina[, c("danceability", "energy")]
-#[, c[("danceability", "energy", "accousticness", "loudness")]]
-ggplot() +
-  geom_point(data = wrapped_subset, aes(x = danceability, y = energy, color = "Wrapped"),
-             alpha = 0.8) +
-  geom_point(data = dailymix1_subset, aes(x = danceability, y = energy, color = "Dailymix1"),
-             alpha = 0.8) +
-  geom_point(data = lina_subset, aes(x = danceability, y = energy, color = "Wings"),
-             alpha = 0.8) +
-  labs(x = "Danceability", y = "Energy", color = "Dataset") +
-  ggtitle("Danceability vs Energy") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.text = element_text(size = 12),
-    legend.position = "bottom"
-  ) +
-  scale_color_manual(values = c("blue", "orange", "red"))
+
+plot_ly() %>%
+  add_trace(data = wrapped_subset, type = "scatter", mode = "markers",
+            x = ~danceability, y = ~energy, color = ~factor("Wrapped"),
+            marker = list(color = "blue"), alpha = 0.8, name = "Wrapped") %>%
+  add_trace(data = dailymix1_subset, type = "scatter", mode = "markers",
+            x = ~danceability, y = ~energy, color = ~factor("Dailymix1"),
+            marker = list(color = "green"), alpha = 0.8, name = "Dailymix1") %>%
+  add_trace(data = lina_subset, type = "scatter", mode = "markers",
+            x = ~danceability, y = ~energy, color = ~factor("Lina"),
+            marker = list(color = "red"), alpha = 0.8, name = "Lina") %>%
+  layout(
+    xaxis = list(title = "Danceability"),
+    yaxis = list(title = "Energy"),
+    title = "Danceability vs Energy",
+    legend = list(orientation = "h"),
+    margin = list(l = 80, r = 80, b = 30, t = 30)
+  )
+
+
 ```
 
 ------------------------------------------------------------------------
@@ -71,27 +77,30 @@ In this plot you can see the enenrgy against the danceability of both the wrappe
 ### Chromachart: Wings by Lina Meike
 
 ```{r}
-wood <-
-  get_tidy_audio_analysis("10RX2JZjVT3Rm9bS6XPEy5") |>
+# Load the data
+wood <- get_tidy_audio_analysis("10RX2JZjVT3Rm9bS6XPEy5") |>
   select(segments) |>
   unnest(segments) |>
   select(start, duration, pitches)
 
-wood |>
+# Perform necessary transformations
+wood <- wood |>
   mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
-  compmus_gather_chroma() |> 
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = pitch_class,
-      fill = value
-    )
-  ) +
+  compmus_gather_chroma() 
+
+# Create ggplot object
+p <- ggplot(wood, aes(x = start + duration / 2, width = duration, y = pitch_class, fill = value)) +
   geom_tile() +
   labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
   theme_minimal() +
   scale_fill_viridis_c()
+
+# Convert ggplot object to Plotly object
+p_plotly <- ggplotly(p)
+
+# Display the interactive plot
+p_plotly
+
 ```
 
 ------------------------------------------------------------------------
