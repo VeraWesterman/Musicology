@@ -19,82 +19,123 @@ library(ggplot2)
 
 ```
 
-
-### Self Similarity matrix: Eyes closed by Ed Sheeran
-
-```{r}
-ed_sheeran <-
-  get_tidy_audio_analysis("3p7XQpdt8Dr6oMXSvRZ9bg") |>
-  select(segments) |>
-  unnest(segments) |>
-  select(start, duration, pitches, timbre)
-
-compmus_long_distance(
-  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  feature = pitches,
-  method = "euclidean"
-) |>
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  coord_equal() +
-  labs(title = "Eyes Closed - Ed Sheeran Pitch", x = NULL, y = NULL) +
-  theme_minimal() +
-  scale_fill_viridis_c(guide = NULL)
-```
-
-
-***
-**What we see:**
-
-Tbh I have a lot of difficulties making sense of this plot and I don't really understand what the use of it is, so if anyone can help in the feedback I would be very greatfull!
-
-### Timbre Similarity matrix: Uncharted by Kensington
+### Keys throughout the song: Europapa
 
 ```{r}
-kensington <-
-  get_tidy_audio_analysis("1OJcaSbK9DBaxHExACplwA") |>
-  select(segments) |>
-  unnest(segments) |>
-  select(start, duration, pitches, timbre)
 
-compmus_long_distance(
-  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  feature = timbre,
-  method = "euclidean"
-) |>
+circshift <- function(v, n) {
+  if (n == 0) v else c(tail(v, n), head(v, -n))
+}
+
+major_key <-
+  c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key <-
+  c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+key_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:maj", circshift(major_key, 6),
+    "Bb:min", circshift(minor_key, 10),
+    "Db:maj", circshift(major_key, 1),
+    "F:min", circshift(minor_key, 5),
+    "Ab:maj", circshift(major_key, 8),
+    "C:min", circshift(minor_key, 0),
+    "Eb:maj", circshift(major_key, 3),
+    "G:min", circshift(minor_key, 7),
+    "Bb:maj", circshift(major_key, 10),
+    "D:min", circshift(minor_key, 2),
+    "F:maj", circshift(major_key, 5),
+    "A:min", circshift(minor_key, 9),
+    "C:maj", circshift(major_key, 0),
+    "E:min", circshift(minor_key, 4),
+    "G:maj", circshift(major_key, 7),
+    "B:min", circshift(minor_key, 11),
+    "D:maj", circshift(major_key, 2),
+    "F#:min", circshift(minor_key, 6),
+    "A:maj", circshift(major_key, 9),
+    "C#:min", circshift(minor_key, 1),
+    "E:maj", circshift(major_key, 4),
+    "G#:min", circshift(minor_key, 8),
+    "B:maj", circshift(major_key, 11),
+    "D#:min", circshift(minor_key, 3)
+  )
+
+get_tidy_audio_analysis("0uHrMbMv3c78398pIANDqR") |>
+  compmus_align(sections, segments) |>
+  select(sections) |>
+  unnest(sections) |>
+  mutate(
+    pitches =
+      map(segments,
+          compmus_summarise, pitches,
+          method = "acentre", norm = "manhattan"
+      )
+  ) |>
+  compmus_match_pitch_template(key_templates, "aitchison", "manhattan") |>
   ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
   ) +
   geom_tile() +
-  coord_equal() +
-  labs(title = "Eyes Closed - Ed Sheeran Timbre", x = NULL, y = NULL) +
+  scale_fill_viridis_c(option = "E", guide = "none") +
   theme_minimal() +
-  scale_fill_viridis_c(guide = NULL)
+  labs(x = "Time (s)", y = "", fill = "Distance")
+
 ```
 
+### Tempo sd vs tempo mean: 2 albums of lauv
 
-***
-**What we see:**
-Here we can see the timbre throughout the song Uncharted by Kensington. The music switches from singing with a guitar to using background singers, drums and other instruments. You can clearly see that the song has a build up in instruments. For the first part only one voice and the guitar is audible, after that the song keeps building up with adding drums and background voices. At some point the timbre changes again (see the yellow lines at 3/4 of the song). In the music only a voice is audible at this part, after that the other instruments and background voices start playing. In the end the song is calming down with only a guitar and main voice. 
+```{r}
 
+bebop <-
+  get_playlist_audio_features(
+    "thesoundsofspotify",
+    "4oVP4N93yIQh6iOsGUiyVh"
+  ) |>
+  slice(1:30) |>
+  add_audio_analysis()
+bigband <-
+  get_playlist_audio_features(
+    "thesoundsofspotify",
+    "2cjIvuw4VVOQSeUAZfNiqY"
+  ) |>
+  slice(1:30) |>
+  add_audio_analysis()
+jazz <-
+  bebop |>
+  mutate(genre = "How I am feeling") |>
+  bind_rows(bigband |> mutate(genre = "I met you when you were 18"))
 
-
+jazz |>
+  mutate(
+    sections =
+      map(
+        sections,                                    # sections or segments
+        summarise_at,
+        vars(tempo, loudness, duration),             # features of interest
+        list(section_mean = mean, section_sd = sd)   # aggregation functions
+      )
+  ) |>
+  unnest(sections) |>
+  ggplot(
+    aes(
+      x = tempo,
+      y = tempo_section_sd,
+      colour = genre,
+      alpha = loudness
+    )
+  ) +
+  geom_point(aes(size = duration / 60)) +
+  geom_rug() +
+  theme_minimal() +
+  ylim(0, 5) +
+  labs(
+    x = "Mean Tempo (bpm)",
+    y = "SD Tempo",
+    colour = "Genre",
+    size = "Duration (min)",
+    alpha = "Volume (dBFS)"
+  )
+```
 
 ### Study Objectives
 
@@ -185,4 +226,77 @@ p_plotly
 **What we see:**
 
 In the picture we can see the chromagram of the song Wings by Lina Meike. This is a song played by a friend of mine.
+
+### Self Similarity matrix: Eyes closed by Ed Sheeran
+
+```{r}
+ed_sheeran <-
+  get_tidy_audio_analysis("3p7XQpdt8Dr6oMXSvRZ9bg") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches, timbre)
+
+compmus_long_distance(
+  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = pitches,
+  method = "euclidean"
+) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(title = "Eyes Closed - Ed Sheeran Pitch", x = NULL, y = NULL) +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL)
+```
+
+
+***
+**What we see:**
+
+Tbh I have a lot of difficulties making sense of this plot and I don't really understand what the use of it is, so if anyone can help in the feedback I would be very greatfull!
+
+### Timbre Similarity matrix: Uncharted by Kensington
+
+```{r}
+kensington <-
+  get_tidy_audio_analysis("1OJcaSbK9DBaxHExACplwA") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches, timbre)
+
+compmus_long_distance(
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = timbre,
+  method = "euclidean"
+) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(title = "Eyes Closed - Ed Sheeran Timbre", x = NULL, y = NULL) +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL)
+```
+
+
+***
+**What we see:**
+Here we can see the timbre throughout the song Uncharted by Kensington. The music switches from singing with a guitar to using background singers, drums and other instruments. You can clearly see that the song has a build up in instruments. For the first part only one voice and the guitar is audible, after that the song keeps building up with adding drums and background voices. At some point the timbre changes again (see the yellow lines at 3/4 of the song). In the music only a voice is audible at this part, after that the other instruments and background voices start playing. In the end the song is calming down with only a guitar and main voice. 
 
