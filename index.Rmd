@@ -82,6 +82,10 @@ get_tidy_audio_analysis("0uHrMbMv3c78398pIANDqR") |>
 
 ```
 
+***
+**What we see:**
+Here we can see how the song Europapa from Joost Klein changes keys throughout the song. It is visible that the song starts in a B minor and changes to a C# minor, which stays the main key. 
+
 ### Tempo sd vs tempo mean: 2 albums of lauv
 
 ```{r}
@@ -136,6 +140,10 @@ jazz |>
     alpha = "Volume (dBFS)"
   )
 ```
+
+***
+**What we see:**
+In this plot the tempo standard deviation is shown against the mean tempo for two albums of the same artist, Lauv. It compares the album `How I am feeling` from 2020 and the album `I met you when I was 18´ from 2018. Also the duration of the songs are visible.
 
 ### Study Objectives
 
