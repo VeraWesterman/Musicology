@@ -43,8 +43,8 @@ get_pr <- function(fit) {
 }  
 
 halloween1 <-
-  get_playlist_audio_features("bnfcollection", "37i9dQZF1DX10zKzsJ2jva") |>
-  add_audio_analysis() |>
+  get_playlist_audio_features("bnfcollection", "0q1di38xTtJS21GjOtaeNb") |>
+  add_audio_analysis() |> 
   mutate(
     segments = map2(segments, key, compmus_c_transpose),
     pitches =
