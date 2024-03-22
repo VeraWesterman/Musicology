@@ -16,8 +16,127 @@ library(plotly)
 library(dplyr)
 library(purrr)
 library(ggplot2)
+library(tidyverse)
+library(tidymodels)
+library(ggdendro)
+library(heatmaply)
 
 ```
+
+### The similarities between dutch rap and reggeaton
+
+```{r}
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit |> 
+    collect_predictions() |> 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit |> 
+    conf_mat_resampled() |> 
+    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
+    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
+    ungroup() |> filter(Prediction == Truth) |> 
+    select(class = Prediction, precision, recall)
+}  
+
+halloween1 <-
+  get_playlist_audio_features("bnfcollection", "37i9dQZF1DX10zKzsJ2jva") |>
+  add_audio_analysis() |>
+  mutate(
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  ) |>
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) |>
+  mutate_at(vars(pitches, timbre), map, bind_rows) |>
+  unnest(cols = c(pitches, timbre))
+
+halloween2 <-
+  get_playlist_audio_features("bnfcollection", "5FtQiHqq3lkfsLXNB4WPeQ") |>
+  add_audio_analysis() |>
+  mutate(
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  ) |>
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) |>
+  mutate_at(vars(pitches, timbre), map, bind_rows) |>
+  unnest(cols = c(pitches, timbre))
+
+both <- bind_rows(halloween1, halloween2)
+
+
+halloween_juice <-
+  recipe(
+    track.name ~
+      danceability +
+      energy +
+      loudness +
+      speechiness +
+      acousticness +
+      instrumentalness +
+      liveness +
+      valence +
+      tempo +
+      duration,
+    data = both
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors()) |> 
+  # step_range(all_predictors()) |> 
+  prep(both |> mutate(track.name = str_trunc(track.name, 20))) |>
+  juice() |>
+  column_to_rownames("track.name")
+
+halloween_dist <- dist(halloween_juice, method = "euclidean")
+
+halloween_dist |> 
+  hclust(method = "single") |> # Try single, average, and complete.
+  dendro_data() |>
+  ggdendrogram()
+```
+
+------------------------------------------------------------------------
+
+**What we see:**\
+Here the similarity between the WOP album, made by the dutch artist Lil Kleine (dutch rap) is plotted together with the spotify list of Reggeaton songs, made in 2024. This hierarchical cluster of songs shows the similarity between different songs. This similarity is based on a lot of different spotify features matched together. It is very interesting that it does not look like all the dutch rap songs cluster together and differ a lot from the reggeaton ones. You can actually see that some of the songs from the WOP album of Lil Kleine are more similar to a reggeaton song then to others of the same album. For example the song *1, 2, 3* from Lil Kleine and Ronnie Flex and the song *Me Porto Bonito* turn out to be somewhat similar.These songs appear to be way more similar then *1, 2, 3* and *Niet omdat het moet,* even though both songs are from two artists and the same album made by Lil Kleine.
+
+### Similar features: Dutch rap vs Reggeaton
+
+```{r}
+heatmaply(
+  halloween_juice,
+  hclustfun = hclust,
+  hclust_method = "average",  # Change for single, average, or complete linkage.
+  dist_method = "euclidean"
+)
+```
+
+------------------------------------------------------------------------
+**What we see:** \
+
+Here we see the same as on the last page, only then a heatmap of the hierarchical clusterings, this way it is immediately visible which features are different for certain songs. The clear yellow and clear dark blue spots show songs that are standing out in that certain field. It is also visible that for these songs energy and loudness are closely related, just as accousticness and speechiness.
 
 ### Keys throughout the song: Europapa
 
@@ -82,9 +201,9 @@ get_tidy_audio_analysis("0uHrMbMv3c78398pIANDqR") |>
 
 ```
 
-***
-**What we see:**
-Here we can see how the song Europapa from Joost Klein changes keys throughout the song. It is visible that the song starts in a B minor and changes to a C# minor, which stays the main key. 
+------------------------------------------------------------------------
+
+**What we see:** Here we can see how the song Europapa from Joost Klein changes keys throughout the song. It is visible that the song starts in a B minor and changes to a C# minor, which stays the main key.
 
 ### Tempo sd vs tempo mean: 2 albums of lauv
 
@@ -141,9 +260,9 @@ jazz |>
   )
 ```
 
-***
-**What we see:**
-In this plot the tempo standard deviation is shown against the mean tempo for two albums of the same artist, Lauv. It compares the album `How I am feeling` from 2020 and the album `I met you when I was 18´ from 2018. Also the duration of the songs are visible.
+------------------------------------------------------------------------
+
+**What we see:** In this plot the tempo standard deviation is shown against the mean tempo for two albums of the same artist, Lauv. It compares the album `How I am feeling` from 2020 and the album \`I met you when I was 18´ from 2018. Also the duration of the songs are visible.
 
 ### Study Objectives
 
@@ -266,8 +385,8 @@ compmus_long_distance(
   scale_fill_viridis_c(guide = NULL)
 ```
 
+------------------------------------------------------------------------
 
-***
 **What we see:**
 
 Tbh I have a lot of difficulties making sense of this plot and I don't really understand what the use of it is, so if anyone can help in the feedback I would be very greatfull!
@@ -303,8 +422,6 @@ compmus_long_distance(
   scale_fill_viridis_c(guide = NULL)
 ```
 
+------------------------------------------------------------------------
 
-***
-**What we see:**
-Here we can see the timbre throughout the song Uncharted by Kensington. The music switches from singing with a guitar to using background singers, drums and other instruments. You can clearly see that the song has a build up in instruments. For the first part only one voice and the guitar is audible, after that the song keeps building up with adding drums and background voices. At some point the timbre changes again (see the yellow lines at 3/4 of the song). In the music only a voice is audible at this part, after that the other instruments and background voices start playing. In the end the song is calming down with only a guitar and main voice. 
-
+**What we see:** Here we can see the timbre throughout the song Uncharted by Kensington. The music switches from singing with a guitar to using background singers, drums and other instruments. You can clearly see that the song has a build up in instruments. For the first part only one voice and the guitar is audible, after that the song keeps building up with adding drums and background voices. At some point the timbre changes again (see the yellow lines at 3/4 of the song). In the music only a voice is audible at this part, after that the other instruments and background voices start playing. In the end the song is calming down with only a guitar and main voice.
