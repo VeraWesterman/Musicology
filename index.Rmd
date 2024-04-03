@@ -1,13 +1,16 @@
 ---
-title: "index.Rmd"
+title: "Dutch rap vs Latin music styles"
+author: "Vera Westerman"
+date: ""
 output: 
   flexdashboard::flex_dashboard:
-    storyboard: true
-    orientation: columns
-    vertical_layout: fill
+    self_contained: false
+    theme:
+      version: 4
+      bootswatch: minty
 ---
 
-```{r setup, include=FALSE}
+```{r, echo=FALSE}
 library(flexdashboard)
 library(tidyverse)
 library(spotifyr)
@@ -20,10 +23,46 @@ library(tidyverse)
 library(tidymodels)
 library(ggdendro)
 library(heatmaply)
+library(viridisLite)
+library(ggdendro)
 
+
+my_palette <- viridis_pal(option = "viridis")(10)
 ```
 
-### The similarities between dutch rap and reggeaton
+# Study objectives
+
+## Column {data-width="700"}
+
+### A Comparative Study of the Dutch rap and Reggaeton
+
+Exactly a year ago I was traveling through Latin-America. There I got in touch with music styles that differ from my usual listening behaviour. Many of the songs that were playing in the clubs and the stores were songs that could be classified under the genre of Reggaeton. In return I put dutch music on the speakers, to show what Dutch music sounded like. I noticed that mainly the Dutch rap was very popular. Several people told me they liked the rhythm in songs like Traag (Bizzy, Jozo, Kraantje Pappie), Drank en drugs (Lil Kleine, Ronnie Flex) and Krantenwijk (Lil Klein, Boef). I want to research if their claim is based on actual musical influences from Latin American music on Dutch Rap.
+
+One of the most famous music styles in the clubs of Ecuador and Colombia is the music style Reggeaton. This style has its roots in reggae, dancehall, hiphop and traditional Puerto Rican music. Reggaeton is characterised by a repetitive rhythm called Dem Bow. Lil Kleine has said in an interview that he uses these Reggeaton rhythms in his songs like Krantenwijk (De standaard, 2018).As a research corpus I will use two lists of songs. As a sample of the Dutch rap I will use the WOP album of Lil kleine. This album contains 11 songs from Lil Kleine, of which a lot of songs are similar in a way to the songs mentioned above. Also 7 of the songs are made in collaboration with Ronnie Flex, another famous Dutch rap artist. For the comparison with the Latin music genre I will be using a more general playlist, with 202,466 likes, called Latin Party 2024. Famous (reggeaton) artist that occur on this playlist are Daddy Yankee, Bad Bunny and Farruko. This playlist contains more general and broader music. Therefore it serves perfectly to research the influences of this music genre on the WOP album of Lil Kleine.
+
+The first part of this research has as goal to find the similarities between the WOP album and the Latin Party playlist. Especially the variables in which they appear to be very similar or different are interesting to take a better look at. For the second part, specific songs from the corpus will be used and compared. Lastly, it will be evaluated to what extend this research leads to external validity. Can the outcome of this research only be seen as applicable for the WOP album and the Reggeaton playlist, or is it something that occurs more general over the music genres?
+
+Reference: Deckx, F. (2018, 16 juni). Lil’ Kleine: Ho, hey, Hazes. De Standaard. <https://www.standaard.be/cnt/dmf20180616_03565900>
+
+## Column {data-width="200"}
+
+### Corpus group 1: Songs before "Currents"
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/6ONleolVjzMuVWDYvnRFA4?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
+</iframe>
+
+## Column {data-width="200"}
+
+### Corpus group 2: Songs from "Currents" and later
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/0q1di38xTtJS21GjOtaeNb?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
+</iframe>
+
+# Song and feature similarities {.storyboard}
+
+### Similarities: A dendogram.
 
 ```{r}
 get_conf_mat <- function(fit) {
@@ -44,7 +83,7 @@ get_pr <- function(fit) {
 
 halloween1 <-
   get_playlist_audio_features("bnfcollection", "0q1di38xTtJS21GjOtaeNb") |>
-  add_audio_analysis() |> 
+  add_audio_analysis() |>
   mutate(
     segments = map2(segments, key, compmus_c_transpose),
     pitches =
@@ -64,7 +103,7 @@ halloween1 <-
   unnest(cols = c(pitches, timbre))
 
 halloween2 <-
-  get_playlist_audio_features("bnfcollection", "5FtQiHqq3lkfsLXNB4WPeQ") |>
+  get_playlist_audio_features("bnfcollection", "6ONleolVjzMuVWDYvnRFA4") |>
   add_audio_analysis() |>
   mutate(
     segments = map2(segments, key, compmus_c_transpose),
@@ -112,15 +151,23 @@ halloween_juice <-
 halloween_dist <- dist(halloween_juice, method = "euclidean")
 
 halloween_dist |> 
-  hclust(method = "single") |> # Try single, average, and complete.
+  hclust(method = "average") |> # Try single, average, and complete.
   dendro_data() |>
   ggdendrogram()
 ```
 
 ------------------------------------------------------------------------
 
-**What we see:**\
-Here the similarity between the WOP album, made by the dutch artist Lil Kleine (dutch rap) is plotted together with the spotify list of Reggeaton songs, made in 2024. This hierarchical cluster of songs shows the similarity between different songs. This similarity is based on a lot of different spotify features matched together. It is very interesting that it does not look like all the dutch rap songs cluster together and differ a lot from the reggeaton ones. You can actually see that some of the songs from the WOP album of Lil Kleine are more similar to a reggeaton song then to others of the same album. For example the song *1, 2, 3* from Lil Kleine and Ronnie Flex and the song *Me Porto Bonito* turn out to be somewhat similar.These songs appear to be way more similar then *1, 2, 3* and *Niet omdat het moet,* even though both songs are from two artists and the same album made by Lil Kleine.
+**What we see:** Here the similarity between the WOP album, made by the dutch artist Lil Kleine (dutch rap) is plotted together with the spotify list of Reggeaton songs, made in 2024. This hierarchical cluster of songs shows the similarity between different songs. This similarity is based on a lot of different spotify features matched together. For this plot the similarity is based on the average linkage, this way it is less sensitive to outliers.
+
+It is very interesting that not all the dutch rap songs cluster together and differ a lot from the reggeaton ones. You can actually see that some of the songs from the WOP album of Lil Kleine are more similar to Reggeaton song then to others of the same album. For example the song *1, 2, 3* from Lil Kleine and Ronnie Flex and the song *Me Porto Bonito* turn out to be somewhat similar.These songs appear to be way more similar then *1, 2, 3* and *Bel me op*, even though both songs are from two artists and the same album made by Lil Kleine.
+
+The song *[SKIT] Drank en Drugs in de Tweede Kamer* (Lil Kleine) appears to be completely differs from the other songs and is not in a cluster with any other songs. This is because this is a sound recording of a speech instead of a song.
+
+**Some interesting songs to take a better look at are:**
+
+-   The song *Fuego* (Markus Martizes, x_V), since it completely differs from the other songs and is not in a cluster with any other songs.
+-   *Moscow Mule* (Bad Bunny) and Stripclub (Lil Kleine, Ronnie Flex), since both seem to be very similar.
 
 ### Similar features: Dutch rap vs Reggeaton
 
@@ -134,196 +181,248 @@ heatmaply(
 ```
 
 ------------------------------------------------------------------------
-**What we see:** \
 
-Here we see the same as on the last page, only then a heatmap of the hierarchical clusterings, this way it is immediately visible which features are different for certain songs. The clear yellow and clear dark blue spots show songs that are standing out in that certain field. It is also visible that for these songs energy and loudness are closely related, just as accousticness and speechiness.
+**What we see:** Here we see the same as on the last page, only then a heatmap of the hierarchical clusterings, this way it is immediately visible which features are different for certain songs. The clear yellow and clear dark blue spots show songs that are standing out in that certain field. It is also visible that for these songs there can be made four similarity clusters: speechiness and acousticness and liveness, energy and valence and loudness, tempo and duration, danceability and instrumentalness. Some of these make sense, while a relation between tempo and duration is very remarkable. Other remarkable points are the 'bright' space with the instrumentalness in the song *Fuego* (Markus Martizes, x_V). This can be decleared to the fact that there are only a few words repeated in the song, which differs from the other tracks. Lastly, the strong speechiness of the song [SKIT] Drank en Drugs in de Tweede Kamer (Lil Kleine) stands out. As mentioned before, this song is a recording of a speech so it would make sense.
 
-### Keys throughout the song: Europapa
+# Track-level features in this corpus {.storyboard}
 
-```{r}
+### Danceability, Energy and Loudness
 
-circshift <- function(v, n) {
-  if (n == 0) v else c(tail(v, n), head(v, -n))
-}
+```{r setup, echo=FALSE}
 
-major_key <-
-  c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
-minor_key <-
-  c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
-key_templates <-
-  tribble(
-    ~name, ~template,
-    "Gb:maj", circshift(major_key, 6),
-    "Bb:min", circshift(minor_key, 10),
-    "Db:maj", circshift(major_key, 1),
-    "F:min", circshift(minor_key, 5),
-    "Ab:maj", circshift(major_key, 8),
-    "C:min", circshift(minor_key, 0),
-    "Eb:maj", circshift(major_key, 3),
-    "G:min", circshift(minor_key, 7),
-    "Bb:maj", circshift(major_key, 10),
-    "D:min", circshift(minor_key, 2),
-    "F:maj", circshift(major_key, 5),
-    "A:min", circshift(minor_key, 9),
-    "C:maj", circshift(major_key, 0),
-    "E:min", circshift(minor_key, 4),
-    "G:maj", circshift(major_key, 7),
-    "B:min", circshift(minor_key, 11),
-    "D:maj", circshift(major_key, 2),
-    "F#:min", circshift(minor_key, 6),
-    "A:maj", circshift(major_key, 9),
-    "C#:min", circshift(minor_key, 1),
-    "E:maj", circshift(major_key, 4),
-    "G#:min", circshift(minor_key, 8),
-    "B:maj", circshift(major_key, 11),
-    "D#:min", circshift(minor_key, 3)
-  )
+Before_Currents <- get_playlist_audio_features("", "0q1di38xTtJS21GjOtaeNb")
+Currents_and_later <- get_playlist_audio_features("", "6ONleolVjzMuVWDYvnRFA4")
 
-get_tidy_audio_analysis("0uHrMbMv3c78398pIANDqR") |>
-  compmus_align(sections, segments) |>
-  select(sections) |>
-  unnest(sections) |>
-  mutate(
-    pitches =
-      map(segments,
-          compmus_summarise, pitches,
-          method = "acentre", norm = "manhattan"
-      )
-  ) |>
-  compmus_match_pitch_template(key_templates, "aitchison", "manhattan") |>
-  ggplot(
-    aes(x = start + duration / 2, width = duration, y = name, fill = d)
-  ) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "E", guide = "none") +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "", fill = "Distance")
+Categorical <- rbind(Before_Currents, Currents_and_later)
+
+ggplot(Categorical, aes(x = danceability, y = energy, size = loudness, color = playlist_name)) +
+geom_point(alpha = 0.5) +
+scale_x_continuous(limits = c(0, 1), breaks = c(0, 0.50, 1), minor_breaks = NULL) +
+scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.50, 1), minor_breaks = NULL) +
+scale_color_manual(values = c("#9900cc", "#009999")) +
+scale_size_continuous(trans = "exp", range = c(1, 10), guide = guide_legend(override.aes = list(size = c(1, 2, 3, 4, 5)))) +
+theme_light() +
+labs(x = "Danceability", y = "Energy", size = "Loudness", color = "Corpus Group",
+     title = "The danceability, energy and loudness by corpus group")
+
 
 ```
 
 ------------------------------------------------------------------------
 
-**What we see:** Here we can see how the song Europapa from Joost Klein changes keys throughout the song. It is visible that the song starts in a B minor and changes to a C# minor, which stays the main key.
+**What we see:** In this plot the danceability is shown against the energy. It is clear that both corpus groups have around the same danceability and energy level. However their loudness (shown by the size of the points) is clearly different. It is interesting to look more clearly into this difference.
 
-### Tempo sd vs tempo mean: 2 albums of lauv
+### Loudness as a differentiating factor
+
+```{r}
+plot_ly() %>%
+  add_trace(data = Before_Currents, x = ~loudness, type = "histogram", 
+            histnorm = "probabilty density", name = "Latin Party 2024", 
+            marker = list(color = "#9900cc", opacity = 0.3)) %>%
+  add_trace(data = Currents_and_later, x = ~loudness, type = "histogram", 
+            histnorm = "probabilty density", name = "WOP Lil Kleine", 
+            marker = list(color = "#009999", opacity = 0.3))%>%
+  layout(xaxis = list(title = "Loudness"), yaxis = list(title = "Density"),
+         title = "Loudness",
+         showlegend = TRUE,
+         legend = list(title = "", orientation = "h"))
+```
+
+------------------------------------------------------------------------
+
+**What we see:** In this histogram it is clearly visible that the Latin Party 2024 music contains more loudness over all. This could be logical since the purpose of this playlist is to be played at a party. There is one outlier in the WOP album with a very low loudness. This must be the [SKIT] Drank en Drugs in de Tweede Kamer track since it is solely a speech with at the end a litte bit of music underneath.
+
+### Comparing speechiness
 
 ```{r}
 
-bebop <-
-  get_playlist_audio_features(
-    "thesoundsofspotify",
-    "4oVP4N93yIQh6iOsGUiyVh"
-  ) |>
-  slice(1:30) |>
-  add_audio_analysis()
-bigband <-
-  get_playlist_audio_features(
-    "thesoundsofspotify",
-    "2cjIvuw4VVOQSeUAZfNiqY"
-  ) |>
-  slice(1:30) |>
-  add_audio_analysis()
-jazz <-
-  bebop |>
-  mutate(genre = "How I am feeling") |>
-  bind_rows(bigband |> mutate(genre = "I met you when you were 18"))
+Energy <-
+  ggplot(Categorical, aes(x = speechiness, colour = "lightblue")) +
+  geom_histogram(binwidth = 0.1) +
+  facet_wrap(~playlist_name, scales = "free_x") + theme(legend.position = "none", 
+  plot.title = element_text(hjust = 0.5), panel.spacing = unit(1, "lines")) + labs(title = "Speechiness per corpus group") +
+  xlim(0, 1) 
+Energy
 
-jazz |>
-  mutate(
-    sections =
-      map(
-        sections,                                    # sections or segments
-        summarise_at,
-        vars(tempo, loudness, duration),             # features of interest
-        list(section_mean = mean, section_sd = sd)   # aggregation functions
-      )
-  ) |>
-  unnest(sections) |>
+```
+
+------------------------------------------------------------------------
+
+**What we see:** This histogram shows the distribution of the songs, based on their speechiness. Here it is visible that the WOP albums contains more speech over all. Again the outlier could be explained by the speech track in the album of Lil Kleine.
+
+### Tempo in both corpus groups
+
+```{r}
+Before_Currents <- get_playlist_audio_features("", "0q1di38xTtJS21GjOtaeNb")
+Currents_and_later <- get_playlist_audio_features("", "6ONleolVjzMuVWDYvnRFA4")
+
+Categorical <- rbind(Before_Currents, Currents_and_later)
+
+Categorical |>
+  
+  ggplot(aes(x = playlist_name, y = tempo, box = FALSE )) +
+  geom_violin(fill = "lightblue", color = "lightblue") + 
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  theme_minimal() +
+  labs(x = "Corpus Group", y = "Tempo",
+  title = "Visualisation of Tempo by corpus group") +
+  theme(
+    plot.subtitle = element_text(size = 12, color = "black"),
+    panel.background = element_rect(fill = "white"),
+    plot.margin = unit(c(5, 10, 5, 10), units = "mm")
+  )
+
+```
+
+------------------------------------------------------------------------
+
+**What we see:** We can see a very interesting difference in the tempo of both corpus groups. The Latin Party 2024 playlist has a median on around the 90 BPM. But there are some outliers with way higher tempo's. For the WOP playlist of Lil Kleine, almost all songs have a tempo between the range of 100-125. However there is one clear oulier with a tempo that is way lower. It can be assumed that this is because of the song "[SKIT] Drank en Drugs in de Tweede Kamer", because this song is a recording of a speech.
+
+# Tempogram: omparing two similar songs
+
+## Column {.tabset}
+
+### Tempogram 1,2,3 \~ Lil Kleine
+
+```{r}
+
+tempogram1 <- readRDS(file = "tempogram1.RDS")
+tempogram2 <- readRDS(file = "tempogram2.RDS")
+print(tempogram1)
+
+# europapa_url <- '1gDH9n1jpqshpu0zGgq69l'
+# graveola_url <- '6Sq7ltF9Qa7SNFBsV5Cogx'
+# graveola <- get_tidy_audio_analysis(europapa_url)
+# 
+# graveola |>
+#   tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+#   ggplot(aes(x = time, y = bpm, fill = power)) +
+#   geom_raster() +
+#   scale_fill_viridis_c(guide = "none") +
+#   labs(x = "Time (s)", y = "Tempo (BPM)") +
+#   theme_classic()
+# 
+# graveola <- get_tidy_audio_analysis(graveola_url)
+# 
+# graveola |>
+#   tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+#   ggplot(aes(x = time, y = bpm, fill = power)) +
+#   geom_raster() +
+#   scale_fill_viridis_c(guide = "none") +
+#   labs(x = "Time (s)", y = "Tempo (BPM)") +
+#   theme_classic()
+```
+
+### Tempogram Me Porto Bonito \~ Bad Bunny
+
+```{r}
+print(tempogram2)
+
+# borderline_cyclic |>
+#   ggplot(aes(x = time, y = bpm, fill = power)) +
+#   geom_raster() +
+#   scale_fill_viridis_c(guide = "none") +
+#   labs(x = "Time (s)", y = "Tempo (BPM)") +
+#   theme_classic()
+
+```
+
+## Column {data-width="350"}
+
+### What we see
+
+Here we see two tempograms of two songs that are similar to each other, as we saw in the dendogram. However the tempo (BPM) is very different in the two songs. Their similarities can still be found in the facts that the songs barely change in tempo throughout the track. Especially in the song 1,2,3 from Lil Kleine. This songs stays in the same tempo except for one short moment at around 90 second. In the music there is a bridge at this part. The tempogram of Me Porto Bonito from Bad Bunny shows that there are two tempo's at the same time. However the music does stay constant and only switches between those two tempo lines. So even though there are differences in the tempo, it is also similar that both songs really stick to a certain tempo throughout the entire song.
+
+```{=html}
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/6Sq7ltF9Qa7SNFBsV5Cogx?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/1gDH9n1jpqshpu0zGgq69l?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+```
+# Timbre: Self Similarity Matrices
+
+## Column {.tabset}
+
+### Zonder Reden \~ Lil Kleine
+
+```{r}
+kensington <-
+  get_tidy_audio_analysis("6xZZqapAUX7Z1kFjrd3hQM") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches, timbre)
+
+compmus_long_distance(
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = timbre,
+  method = "euclidean"
+) |>
   ggplot(
     aes(
-      x = tempo,
-      y = tempo_section_sd,
-      colour = genre,
-      alpha = loudness
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
     )
   ) +
-  geom_point(aes(size = duration / 60)) +
-  geom_rug() +
+  geom_tile() +
+  coord_equal() +
+  labs(title = "Zonder Reden ~ Lil Kleine Timbre", x = NULL, y = NULL) +
   theme_minimal() +
-  ylim(0, 5) +
-  labs(
-    x = "Mean Tempo (bpm)",
-    y = "SD Tempo",
-    colour = "Genre",
-    size = "Duration (min)",
-    alpha = "Volume (dBFS)"
-  )
+  scale_fill_viridis_c(guide = NULL)
 ```
 
-------------------------------------------------------------------------
-
-**What we see:** In this plot the tempo standard deviation is shown against the mean tempo for two albums of the same artist, Lauv. It compares the album `How I am feeling` from 2020 and the album \`I met you when I was 18´ from 2018. Also the duration of the songs are visible.
-
-### Study Objectives
-
-**A** **Comparative Study of Spotify Wrapped Playlists and Daily Mixes**
-
-For this research I will be comping my personalized music library, wrapped music from 2023, with Spotify's daily mixes to assess the quality of Spotify's playlists. The daily mixes are made by spotify, based on my previous listening behaviour. I want to explore two research questions. Firstly, I want to see how closely my 2023 wrapped music matches the songs in Spotify's playlists. Secondly, I'm investigating whether Spotify organizes its playlists logically by grouping similar music together or if they vary widely. This will be done by comparing the daily mixes with each other. Additionally, I'm interested in whether Spotify only includes music from my most-listened genres or if they include songs outside of my usual preferences. My wrapped music contains mostly English pop music, but also has the occasional rock/rap and dutch songs. It contains 100 songs. Spotify provides six daily mixes, which all contain 50 songs and differ from each other in artists. The comparison of my wrapped and the daily mixes is intriguing because Spotify's algorithms are based on my typical listening habits. Although the daily mixes are influenced by all my listening behaviors, and not only by the behaviour in 2023, I believe it's still a valid comparison since my music taste hasn't changed much since last year. There are some songs in my wrapped that are in a different style then the others, one example is the song Mansion by NF, which could be categorized as hiphop. I want to explore how these outliers are represented in the daily mixes.
-
-### How similar are the wrapped and dailymixes? (Danceability vs Energy)
+### MIA \~ Bad Bunny and Drake
 
 ```{r}
-library(ggplot2)
-library(spotifyr)
+kensington <-
+  get_tidy_audio_analysis("116H0KvKr2Zl4RPuVBruDO") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches, timbre)
 
-howImfeeling <- get_album_tracks("3ZuE680xhR1A4bCFGvL8mi")
-Lauv <- get_artist_audio_features("5JZ7CnR6gTvEMKX4g70Amv")
-dailymix1 <- get_playlist_audio_features("", "7q9rJndtwhJU0I1NnIQ0Mb")
-dailymix2 <- get_playlist_audio_features("", "3Q7MLkx3oC8SAyQHKKyxFb")
-dailymix3 <- get_playlist_audio_features("", "29qms80NIUefqQETWqEkih")
-dailymix4 <- get_playlist_audio_features("", "7cX6TM5B1pnMya6mRIr1y1")
-dailymix5 <- get_playlist_audio_features("", "6LdtUdGsF399LonyHPc3OG")
-dailymix6 <- get_playlist_audio_features("", "0ZWKIhgkIHSHImcwnSmIgv")
-wrapped <- get_playlist_audio_features("", "3t3AcAxKQhFuWkD4791XWP")
-lina <- get_track_audio_features("1wwVk5Zzzc7dRZ3SjHhQIB")
-lina_analysis <- get_track_audio_analysis("1wwVk5Zzzc7dRZ3SjHhQIB")
-
-wrapped_subset <- wrapped[, c("danceability", "energy")]
-dailymix1_subset <- dailymix1[, c("danceability", "energy")]
-lina_subset <- lina[, c("danceability", "energy")]
-
-plot_ly() %>%
-  add_trace(data = wrapped_subset, type = "scatter", mode = "markers",
-            x = ~danceability, y = ~energy, color = ~factor("Wrapped"),
-            marker = list(color = "blue"), alpha = 0.8, name = "Wrapped") %>%
-  add_trace(data = dailymix1_subset, type = "scatter", mode = "markers",
-            x = ~danceability, y = ~energy, color = ~factor("Dailymix1"),
-            marker = list(color = "green"), alpha = 0.8, name = "Dailymix1") %>%
-  add_trace(data = lina_subset, type = "scatter", mode = "markers",
-            x = ~danceability, y = ~energy, color = ~factor("Lina"),
-            marker = list(color = "red"), alpha = 0.8, name = "Lina") %>%
-  layout(
-    xaxis = list(title = "Danceability"),
-    yaxis = list(title = "Energy"),
-    title = "Danceability vs Energy",
-    legend = list(orientation = "h"),
-    margin = list(l = 80, r = 80, b = 30, t = 30)
-  )
-
-
+compmus_long_distance(
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = timbre,
+  method = "euclidean"
+) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(title = "Zonder Reden ~ Lil Kleine Timbre", x = NULL, y = NULL) +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL)
 ```
 
-------------------------------------------------------------------------
+## Column {data-width="350"}
 
-**What we see:**
+### What we see
 
-In this plot you can see the enenrgy against the danceability of both the wrapped and the dailymix1 dataset. It is visible that the range of danceability and energy of both playlists are very different from each other. It is interesting to compare this to see how much the music of the dailymix relates to the kind of music in the wrapped playlist. However this is just one of the daily mixes, for further analysis it would be interesting to look at the result of several daily mixes.
+Here we can see the timbre throughout the song Zonder Reden by Lil Kleine and Ronnie Flex and the song MIA by Bad Bunny and Drake. It is chosen to compare these two songs, since they appear to be quiet similar according to the dendogram on the first page.
 
-### Chromachart: Wings by Lina Meike
+First of all, for the track Zonder Reden, it is visible that the song clearly repeats certain patterns the entire time. There are a few different timbre sounds that he varies between, but there are no very clear 'bright' lines that indicate a sounds that appears no were else in the song. It is interesting to analyse this, since the artist used sounds that are not regularly in a music track (I can't identify it exactly). However, the artist still chooses to repeat the same music patterns.
+
+Secondly, the song MIA of Bad Bunny and Drake contains the same timbre throughout the entire songs, this is visible in the checkerboard pattern. There is only a small difference in the bridge. This aligns with the assumption that this music style contains a solid pattern throughout the songs.
+
+# Chromachart: the outliers
+
+## Column {.tabset}
+
+### Fuego \~ Markus Martizes and x_V
 
 ```{r}
 # Load the data
-chroma <- get_tidy_audio_analysis("10RX2JZjVT3Rm9bS6XPEy5") |>
+chroma <- get_tidy_audio_analysis("7IT9RHzGKUpXsQgJYu1yYO") |>
   select(segments) |>
   unnest(segments) |>
   select(start, duration, pitches)
@@ -348,80 +447,56 @@ p_plotly
 
 ```
 
-------------------------------------------------------------------------
-
-**What we see:**
-
-In the picture we can see the chromagram of the song Wings by Lina Meike. This is a song played by a friend of mine.
-
-### Self Similarity matrix: Eyes closed by Ed Sheeran
+### Mist & Regen \~ Lil Kleine
 
 ```{r}
-ed_sheeran <-
-  get_tidy_audio_analysis("3p7XQpdt8Dr6oMXSvRZ9bg") |>
+# Load the data
+chroma <- get_tidy_audio_analysis("6aifuonXNVhAAz6YrDtXLG") |>
   select(segments) |>
   unnest(segments) |>
-  select(start, duration, pitches, timbre)
+  select(start, duration, pitches)
 
-compmus_long_distance(
-  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  ed_sheeran |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  feature = pitches,
-  method = "euclidean"
-) |>
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
+# Perform necessary transformations
+chroma <- chroma |>
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+  compmus_gather_chroma() 
+
+# Create ggplot object
+p <- ggplot(chroma, aes(x = start + duration / 2, width = duration, y = pitch_class, fill = value)) +
   geom_tile() +
-  coord_equal() +
-  labs(title = "Eyes Closed - Ed Sheeran Pitch", x = NULL, y = NULL) +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
   theme_minimal() +
-  scale_fill_viridis_c(guide = NULL)
+  scale_fill_viridis_c()
+
+# Convert ggplot object to Plotly object
+p_plotly <- ggplotly(p)
+
+# Display the interactive plot
+p_plotly
+
 ```
 
-------------------------------------------------------------------------
+## Column {data-width="350"}
 
-**What we see:**
+### What we see:
 
-Tbh I have a lot of difficulties making sense of this plot and I don't really understand what the use of it is, so if anyone can help in the feedback I would be very greatfull!
+Here we see two chromacharts of the songs Fuego by Markus Martizes and x_V and Mist & Regen by Lil Kleine. These two songs are both completely on different sides of the clustered dendogram, therefor it would be interesting to compare these. As visible in the heatmap of the dendogram on the second page, the difference could mainly be explained because of the instrumentalness of the song Fuego by Markus Martizes and x_V, which is way lower than the one of Mist & Regen. However it would be interesting to see if these two songs also differ a lot in their used pitches and their switches in such.
 
-### Timbre Similarity matrix: Uncharted by Kensington
+In the chromachart of Fuego we can see that the song merely uses the same pitch classes throughout the entire track. Throughout most of the song the D and C#\|Db pitch classes are used. However at around 100 seconds this changes to a A, E and D. At this point the music changes and there is a part with a singing voice.
 
-```{r}
-kensington <-
-  get_tidy_audio_analysis("1OJcaSbK9DBaxHExACplwA") |>
-  select(segments) |>
-  unnest(segments) |>
-  select(start, duration, pitches, timbre)
+In the chromachart of Mist & Regen, we can see that the beginning is very different to the rest of the song. The reason for this is that the song begins with mainly a voice and not a lot of musical instruments. Therefore one instrument influences the chromachart directly if the pitch switches. Later in the song, the music builds up and you can see that several main pitch classes are reused.
 
-compmus_long_distance(
-  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  kensington |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
-  feature = timbre,
-  method = "euclidean"
-) |>
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  coord_equal() +
-  labs(title = "Eyes Closed - Ed Sheeran Timbre", x = NULL, y = NULL) +
-  theme_minimal() +
-  scale_fill_viridis_c(guide = NULL)
-```
+In total we can conclude that these songs are not very similar on the aspect of chroma as well. Even though both mix several pitch classes, there are no further similarities that can be deriven from this.
 
-------------------------------------------------------------------------
+# Conclusion
 
-**What we see:** Here we can see the timbre throughout the song Uncharted by Kensington. The music switches from singing with a guitar to using background singers, drums and other instruments. You can clearly see that the song has a build up in instruments. For the first part only one voice and the guitar is audible, after that the song keeps building up with adding drums and background voices. At some point the timbre changes again (see the yellow lines at 3/4 of the song). In the music only a voice is audible at this part, after that the other instruments and background voices start playing. In the end the song is calming down with only a guitar and main voice.
+We can conclude that the WOP album of Lil Kleine and the Latin Party 2024 playlist contain a lot of similarities. This is mainly visible in the dendogram. Since some songs appear to be more similar to songs from the other corpus group than the ones from their own. However it is quite diffivult to locate these similarities exactly. They lie for sure in the danceability and energy. Also the tempo in the WOP album of Lil Kleine is close to the tempo used in most of the Latin Party 2024 songs. Other intersting comparisons appear out of the track specific features. For example it seems that the song 1,2,3 from Lil Kleine and the sonf Me Porto Bonito from Bad Bunny both stick to a certain tempo throughout the entire song and they barely change this. Both corpus groups seem to use a lot of repetitive patterns in their songs and they don't vary a lot in timbre.  
+
+Furthermore the differences between the two corpus groups can be found in the loudness and speechiness. Also there are still a few outliers, these contains tracks that only consist of a recording of a speech or tracks that barely contain any speech. 
+
+Therefore it is clear that there are certain similarities in the songs and the music styles don't differ extremely. It seems that Lil Kleine could have taken inspiration from reggeaton and other Latin american music. Especially in the sense of using repetitive patterns with a same dancability and energy level. However this correlation does not necessarily mean causality, it does not have to mean that he used this music style for inspiration. 
+
+Moreover, the Latin Party 2024 playlist contains some variety. Most songs could be classified as reggeaton but there are also other music genres in this list. We can see that Lil Kleine mainly has similarity with songs from Bad Bunny. It would be interesting to research further to which music styles the WOP album compares. 
+
+More research needs to be done to make these findings valid in other cases. Eventhough Lil Kleine is a famous artist in the dutch rap scene, it is not necessarily that all the music of this genre has similarities with Latin music. 
+
